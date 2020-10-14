@@ -242,7 +242,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_SIZE:
 
 		
-		bridge->Resize(rect,&x,&y);
+		bridge->OnResize(rect,&x,&y);
 		g_windowWidth = LOWORD(lParam);
 		g_windowHeight = HIWORD(lParam);
 		break;
@@ -277,7 +277,6 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 	}
 	return (INT_PTR)FALSE;
 }
-
 
 void OnCreate(HWND hWnd,WPARAM wParam,LPARAM lParam) {
 

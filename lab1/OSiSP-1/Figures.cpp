@@ -5,7 +5,7 @@ void IFigure::Draw(HDC hdc,int x,int y) {
 
 
 }
-void IFigure::Resize(RECT r, int* x, int* y) {
+void IFigure::OnResize(RECT r, int* x, int* y) {
 	if (*x < 0)
 		*x = 0;
 	if (*y < 0)
@@ -126,6 +126,6 @@ void Bridge::Draw(HDC hdc, int x, int y) {
 void Bridge::Move(RECT r, int* x, int* y, int direction) {
 	_currentFigure->Move(r, x, y,direction);
 }
-void Bridge::Resize(RECT r, int* x, int* y) {
-	_currentFigure->Resize(r, x, y);
+void Bridge::OnResize(RECT r, int* x, int* y) {
+	_currentFigure->OnResize(r, x, y);
 }

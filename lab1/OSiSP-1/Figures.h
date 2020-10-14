@@ -16,7 +16,7 @@ protected:
 public:
 	virtual void Draw(HDC, int, int);
 	virtual void Move(RECT, int*, int*, int);
-	void Resize(RECT, int*, int*);
+	void OnResize(RECT, int*, int*);
 private:
 	virtual bool CheckBound(RECT, int, int);
 };
@@ -25,7 +25,7 @@ private:
 class AuthorRect :public IFigure
 {		  
 public:
-	AuthorRect(int, int);
+	AuthorRect(int, int);						  
 	virtual void Draw(HDC, int, int) override;
 };
 
@@ -53,6 +53,6 @@ public:
 	void SetInterface(IFigure *figure);
 	void Draw(HDC, int, int);
 	void Move(RECT, int*, int*, int);
-	void Resize(RECT, int*, int*);
+	void OnResize(RECT, int*, int*);
 };
 /**/
