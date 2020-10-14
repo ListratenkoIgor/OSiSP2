@@ -5,6 +5,19 @@ void IFigure::Draw(HDC hdc,int x,int y) {
 
 
 }
+void IFigure::Resize(RECT r, int* x, int* y) {
+	if (*x < 0)
+		*x = 0;
+	if (*y < 0)
+		*y = 0;
+	if ((*x + this->width) > r.right) {
+		*x = r.right - this->width;
+	}
+	if ((*y + this->height) > r.bottom) {
+		*y = r.bottom - this->height;
+	}								 								
+}
+
 void IFigure::Move(RECT r, int* x, int* y, int direction) {
 	int newX = *x, newY = *y;
 	switch (direction)
@@ -112,4 +125,7 @@ void Bridge::Draw(HDC hdc, int x, int y) {
 }
 void Bridge::Move(RECT r, int* x, int* y, int direction) {
 	_currentFigure->Move(r, x, y,direction);
+}
+void Bridge::Resize(RECT r, int* x, int* y) {
+	_currentFigure->Resize(r, x, y);
 }

@@ -16,6 +16,7 @@ protected:
 public:
 	virtual void Draw(HDC, int, int);
 	virtual void Move(RECT, int*, int*, int);
+	void Resize(RECT, int*, int*);
 private:
 	virtual bool CheckBound(RECT, int, int);
 };
@@ -52,5 +53,6 @@ public:
 	void SetInterface(IFigure *figure);
 	void Draw(HDC, int, int);
 	void Move(RECT, int*, int*, int);
+	void Resize(RECT, int*, int*);
 };
 /**/

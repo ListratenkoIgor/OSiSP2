@@ -135,11 +135,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	int fwKeys ;
 	int zDelta ;
 	switch (message)
-	{
-
+	{				  
 	case WM_KEYDOWN: {
-		//RECT rect;
-		//GetClientRect(hWnd, &rect);
 		switch (wParam)
 		{
 		case VK_LEFT:
@@ -170,14 +167,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		default:
 			break;
 		}
-		//InvalidateRect(hWnd,NULL,false);
 		RedrawWindow(hWnd, NULL, NULL, RDW_UPDATENOW | RDW_INVALIDATE);
 		break;
 	}
 	case WM_COMMAND:
 	{
 		int wmId = LOWORD(wParam);
-		// Разобрать выбор в меню:
 		switch (wmId)
 		{
 		case IDM_ABOUT:
@@ -217,32 +212,37 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	}
 	break;
 	case WM_MOUSEWHEEL:
+	{
 		fwKeys = GET_KEYSTATE_WPARAM(wParam);
 		zDelta = GET_WHEEL_DELTA_WPARAM(wParam);
 		switch (fwKeys) {
-			case MK_SHIFT:
-				if (zDelta > 0) {
-					bridge->Move(rect, &x, &y, USER_LEFT);
-				}
-				else {
-					bridge->Move(rect, &x, &y, USER_RIGHT);
-				}
-				break;
-			default:
-				if (zDelta > 0) {
-					bridge->Move(rect, &x, &y, USER_UP);
-				}
-				else {
-					bridge->Move(rect, &x, &y, USER_DOWN);
-				}
-				break;
+		case MK_SHIFT:
+			if (zDelta > 0) {
+				bridge->Move(rect, &x, &y, USER_LEFT);
+			}
+			else {
+				bridge->Move(rect, &x, &y, USER_RIGHT);
+			}
+			break;
+		default:
+			if (zDelta > 0) {
+				bridge->Move(rect, &x, &y, USER_UP);
+			}
+			else {
+				bridge->Move(rect, &x, &y, USER_DOWN);
+			}
+			break;
 		}
-		RedrawWindow(hWnd, NULL, NULL, RDW_UPDATENOW | RDW_INVALIDATE);
+		RedrawWindow(hWnd, NULL, NULL, RDW_UPDATENOW | RDW_INVALIDATE);	   
+	}
 		break;
 	case WM_DESTROY:
 		PostQuitMessage(0);
 		break;
 	case WM_SIZE:
+
+		
+		bridge->Resize(rect,&x,&y);
 		g_windowWidth = LOWORD(lParam);
 		g_windowHeight = HIWORD(lParam);
 		break;
