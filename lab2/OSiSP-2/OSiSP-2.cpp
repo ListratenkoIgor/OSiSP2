@@ -3,7 +3,6 @@
 
 #include "framework.h"
 #include "OSiSP-2.h"
-#include <commdlg.h>
 #define MAX_LOADSTRING 100
 
 // Глобальные переменные:
@@ -14,6 +13,7 @@ WCHAR szWindowClass[MAX_LOADSTRING];            // имя класса глав�
 unsigned long MinimumWorkingSetSize;
 unsigned long MaximumWorkingSetSize;
 TablePainter* painter;
+MemoryWatcher* watcher;
 Strings content;
 void OnCreate(HWND, WPARAM, LPARAM);
 wstring OpenFile(HWND);
@@ -35,6 +35,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     // TODO: Разместите код здесь.   
 
+    watcher = new MemoryWatcher("e:/MemoryLog.txt");
     SystemConfigurate();
     SetProcessWorkingSetSizeEx(
         GetCurrentProcess(),
@@ -42,7 +43,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         MaximumWorkingSetSize,
         QUOTA_LIMITS_HARDWS_MAX_DISABLE
     );           
-    //SetProcessWorkingSetSizeEx(GetCurrentProcess(),-1,-1,QUOTA_LIMITS_HARDWS_MAX_DISABLE);
+    watcher->WriteMemory(true, "start");
     // Инициализация глобальных строк
     LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
     LoadStringW(hInstance, IDC_OSISP2, szWindowClass, MAX_LOADSTRING);
@@ -57,7 +58,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_OSISP2));
 
     MSG msg;
-
     // Цикл основного сообщения:
     while (GetMessage(&msg, nullptr, 0, 0))
     {
@@ -160,10 +160,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             switch (wmId)
             {
             case IDC_OPENFILE_DIALOG:
+
+                watcher->WriteMemory(true, "Open Dialog");
                 FilePath = OpenFile(hWnd);
                 if (!FilePath.empty()) {
                     FileReader* reader = new FileReader();
                     content = reader->GetContentFromFile((std::string (FilePath.begin(), FilePath.end())));
+                    delete reader;
                     if (!content.empty()) {                     
                         if (painter != nullptr) {
                             painter->SetContent(content);
@@ -171,10 +174,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                         else {
                             painter = new TablePainter(content);
                         }
-                        RedrawWindow(hWnd, NULL, NULL, RDW_UPDATENOW| RDW_ERASENOW | RDW_INVALIDATE);
-                    }
-                }
 
+                        watcher->WriteMemory(true, "Close Dialog Success");
+                        RedrawWindow(hWnd, NULL, NULL, RDW_UPDATENOW| RDW_ERASENOW | RDW_INVALIDATE);
+                    }                    
+                }
+                else
+                {
+                    watcher->WriteMemory(true, "Close Dialog Cancel");
+                }
                 break;
             case IDM_ABOUT:
                 DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
@@ -188,7 +196,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         }
         break;
     case WM_PAINT:
-        {
+        {                                                          
+            watcher->WriteMemory(true, "Begin paint");
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hWnd, &ps);
             RECT rect;
@@ -201,12 +210,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 MessageBox(NULL, L"Таблица строк не найдена,пожалуйста выберите файл", L"warning", MB_ICONERROR);
             }
             EndPaint(hWnd, &ps);
+
+            watcher->WriteMemory(true, "End paint");
         }
         break;
     case WM_CREATE:
         OnCreate(hWnd,wParam,lParam);
         break;
     case WM_DESTROY:
+        delete painter;
+        delete watcher;
         PostQuitMessage(0);
         break;
     default:
@@ -221,6 +234,7 @@ void OnCreate(HWND hWnd, WPARAM wParam, LPARAM lParam) {
     if (!content.empty()) {
         painter = new TablePainter(content);
     }
+    delete reader;
 }
 
 wstring OpenFile(HWND hWnd) {
@@ -243,8 +257,8 @@ wstring OpenFile(HWND hWnd) {
         return str;
     }
     else {
-        wstring str(NULL);
-        return str;
+        //wstring str(NULL);
+        return nullptr;
     }
 }
 
