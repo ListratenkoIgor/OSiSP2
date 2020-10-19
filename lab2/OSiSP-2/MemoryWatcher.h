@@ -1,8 +1,10 @@
 #pragma once
 #include "types.h"
 #include <psapi.h>
+#include <aclapi.h>
 #include <thread>
 #include <iostream>
+
 class MemoryWatcher
 {
 private:

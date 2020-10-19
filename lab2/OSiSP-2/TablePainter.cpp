@@ -1,8 +1,7 @@
 #include "TablePainter.h"
 
-
-inline std::string GetMaxString(Strings content) {
-
+inline std::string GetMaxString(Strings content) 
+{  
     std::string maxString = content[0][0];
     for (int i = 0; i < content.size(); i++)
     {
@@ -16,7 +15,6 @@ inline std::string GetMaxString(Strings content) {
     }
     return maxString;
 }
-
 inline wchar_t* StringToLPCWSTR(std::string str)
 {
     int length = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), -1, NULL, 0);
@@ -24,7 +22,6 @@ inline wchar_t* StringToLPCWSTR(std::string str)
     MultiByteToWideChar(CP_UTF8, 0, str.c_str(), -1, text, length);
     return text;
 }
-
 inline void InitRect(int colWidth, int rowHeight, RECT* rect)
 {
     rect->left = colWidth + STEP;
@@ -70,15 +67,13 @@ void TablePainter::DrawTable(HDC hdc, int width, int height)
     }
     DrawCells(hdc, width, height);
 }
-
 void TablePainter::DrawCells(HDC hdc, int width, int height)
 {
     RECT rect;
     HFONT hfont;
     RECT tempRect;
     HFONT oldFont;
-    LPCWSTR text = StringToLPCWSTR(this->maxString);
-    
+    LPCWSTR text = StringToLPCWSTR(this->maxString);    
     BOOL temp = FALSE;
     int colWidth = width / _colCount;
     int rowHeight = height / _rowCount;
@@ -94,7 +89,6 @@ void TablePainter::DrawCells(HDC hdc, int width, int height)
         hfont = (HFONT)SelectObject(hmemDC, oldFont);
         temp = DeleteObject(hfont);
         int fontHeight = rowHeight;
-
         while (tempRect.right > rect.right) {
             InitRect(colWidth, rowHeight, &tempRect);
             fontHeight -= STEP;
@@ -111,7 +105,6 @@ void TablePainter::DrawCells(HDC hdc, int width, int height)
             ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
             DEFAULT_PITCH | FF_SWISS, FONT);
         oldFont = (HFONT)SelectObject(hdc, hfont);
-        // draw text
         for (int i = 0; i < _rowCount; i++)
         {
             for (int j = 0; j < _colCount; j++)

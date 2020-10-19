@@ -10,14 +10,13 @@ HINSTANCE hInst;                                // текущий экземпл
 WCHAR szTitle[MAX_LOADSTRING];                  // Текст строки заголовка
 WCHAR szWindowClass[MAX_LOADSTRING];            // имя класса главного окна
 
-unsigned long MinimumWorkingSetSize;
-unsigned long MaximumWorkingSetSize;
 TablePainter* painter;
 MemoryWatcher* watcher;
 Strings content;
+int SystemConfigurate();
 void OnCreate(HWND, WPARAM, LPARAM);
 wstring OpenFile(HWND);
-int SystemConfigurate();
+
 
 // Отправить объявления функций, включенных в этот модуль кода:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -34,29 +33,28 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     UNREFERENCED_PARAMETER(lpCmdLine);
 
     // TODO: Разместите код здесь.   
+    try
+    {
+        watcher = new MemoryWatcher("e:/MemoryLog.txt");
+        SystemConfigurate();
+        watcher->WriteMemory(true, "start");
+    }
+    catch (const std::exception&)
+    {
+        MessageBox(NULL, L"Не найден файл логгирования", L"warning", MB_ICONERROR);
+        return 1;
+    }
 
-    watcher = new MemoryWatcher("e:/MemoryLog.txt");
-    SystemConfigurate();
-    SetProcessWorkingSetSizeEx(
-        GetCurrentProcess(),
-        MinimumWorkingSetSize,
-        MaximumWorkingSetSize,
-        QUOTA_LIMITS_HARDWS_MAX_DISABLE
-    );           
-    watcher->WriteMemory(true, "start");
     // Инициализация глобальных строк
     LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
     LoadStringW(hInstance, IDC_OSISP2, szWindowClass, MAX_LOADSTRING);
     MyRegisterClass(hInstance);
-
     // Выполнить инициализацию приложения:
     if (!InitInstance (hInstance, nCmdShow))
     {
         return FALSE;
     }
-
     HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_OSISP2));
-
     MSG msg;
     // Цикл основного сообщения:
     while (GetMessage(&msg, nullptr, 0, 0))
@@ -67,7 +65,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
             DispatchMessage(&msg);
         }
     }
-
     return (int) msg.wParam;
 }
 
@@ -124,119 +121,6 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
    return TRUE;
 }
-
-//
-//  ФУНКЦИЯ: WndProc(HWND, UINT, WPARAM, LPARAM)
-//
-//  ЦЕЛЬ: Обрабатывает сообщения в главном окне.
-//
-//  WM_COMMAND  - обработать меню приложения
-//  WM_PAINT    - Отрисовка главного окна
-//  WM_DESTROY  - отправить сообщение о выходе и вернуться
-//
-//
-
-std::string WideCharToString(wchar_t** wInput)
-{
-    std::string sOutput = "";
-    size_t* nbOfChar = new size_t;
-    char* cOut = new char[256];
-    size_t sizeInBytes = 256;
-
-    wcstombs_s(nbOfChar, cOut, sizeInBytes, *wInput, 256);
-    sOutput += cOut;
-
-    return sOutput;
-
-}
-LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
-    switch (message)
-    {
-    case WM_COMMAND:
-        {
-            wstring FilePath;   
-            int wmId = LOWORD(wParam);
-            switch (wmId)
-            {
-            case IDC_OPENFILE_DIALOG:
-
-                watcher->WriteMemory(true, "Open Dialog");
-                FilePath = OpenFile(hWnd);
-                if (!FilePath.empty()) {
-                    FileReader* reader = new FileReader();
-                    content = reader->GetContentFromFile((std::string (FilePath.begin(), FilePath.end())));
-                    delete reader;
-                    if (!content.empty()) {                     
-                        if (painter != nullptr) {
-                            painter->SetContent(content);
-                        }
-                        else {
-                            painter = new TablePainter(content);
-                        }
-
-                        watcher->WriteMemory(true, "Close Dialog Success");
-                        RedrawWindow(hWnd, NULL, NULL, RDW_UPDATENOW| RDW_ERASENOW | RDW_INVALIDATE);
-                    }                    
-                }
-                else
-                {
-                    watcher->WriteMemory(true, "Close Dialog Cancel");
-                }
-                break;
-            case IDM_ABOUT:
-                DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
-                break;
-            case IDM_EXIT:
-                DestroyWindow(hWnd);
-                break;
-            default:
-                return DefWindowProc(hWnd, message, wParam, lParam);
-            }
-        }
-        break;
-    case WM_PAINT:
-        {                                                          
-            watcher->WriteMemory(true, "Begin paint");
-            PAINTSTRUCT ps;
-            HDC hdc = BeginPaint(hWnd, &ps);
-            RECT rect;
-            GetClientRect(hWnd, &rect);
-            FillRect(hdc, &rect, (HBRUSH)WHITENESS);
-            if (painter != nullptr) {
-                painter->DrawTable(hdc,rect.right,rect.bottom);
-            }
-            else {
-                MessageBox(NULL, L"Таблица строк не найдена,пожалуйста выберите файл", L"warning", MB_ICONERROR);
-            }
-            EndPaint(hWnd, &ps);
-
-            watcher->WriteMemory(true, "End paint");
-        }
-        break;
-    case WM_CREATE:
-        OnCreate(hWnd,wParam,lParam);
-        break;
-    case WM_DESTROY:
-        delete painter;
-        delete watcher;
-        PostQuitMessage(0);
-        break;
-    default:
-        return DefWindowProc(hWnd, message, wParam, lParam);
-    }
-    return 0;
-}
-
-void OnCreate(HWND hWnd, WPARAM wParam, LPARAM lParam) {
-    FileReader* reader=new FileReader();
-    content = reader->GetContentFromFile("d:/context2.txt");
-    if (!content.empty()) {
-        painter = new TablePainter(content);
-    }
-    delete reader;
-}
-
 wstring OpenFile(HWND hWnd) {
     OPENFILENAME ofn;
     WCHAR szFile[256] = { 0 };
@@ -257,29 +141,143 @@ wstring OpenFile(HWND hWnd) {
         return str;
     }
     else {
-        //wstring str(NULL);
-        return nullptr;
+        wstring str(ofn.lpstrFile);
+        return str;
     }
 }
 
+//
+//  ФУНКЦИЯ: WndProc(HWND, UINT, WPARAM, LPARAM)
+//
+//  ЦЕЛЬ: Обрабатывает сообщения в главном окне.
+//
+//  WM_COMMAND  - обработать меню приложения
+//  WM_PAINT    - Отрисовка главного окна
+//  WM_DESTROY  - отправить сообщение о выходе и вернуться
+//
+//         
+LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    switch (message)
+    {
+    case WM_COMMAND:
+        {
+            wstring FilePath;   
+            int wmId = LOWORD(wParam);
+            switch (wmId)
+            {
+            case IDC_OPENFILE_DIALOG:
+                if(watcher!=NULL)
+                    watcher->WriteMemory(true, "Open Dialog");
+                FilePath = OpenFile(hWnd);
+                if (!FilePath.empty()) {
+                    FileReader* reader = new FileReader();
+                    content = reader->GetContentFromFile((std::string (FilePath.begin(), FilePath.end())));
+                    delete reader;
+                    if (!content.empty()) {                     
+                        if (painter != nullptr) {
+                            painter->SetContent(content);
+                        }
+                        else {
+                            painter = new TablePainter(content);
+                        }
+                        if (watcher != NULL)
+                            watcher->WriteMemory(true, "Close Dialog Success");
+                        RedrawWindow(hWnd, NULL, NULL, RDW_UPDATENOW| RDW_ERASENOW | RDW_INVALIDATE);
+                    }                    
+                }
+                else
+                {
+                    if (watcher != NULL)
+                        watcher->WriteMemory(true, "Close Dialog Cancel");
+                }
+                break;
+            case IDM_ABOUT:
+                DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
+                break;
+            case IDM_EXIT:
+                DestroyWindow(hWnd);
+                break;
+            default:
+                return DefWindowProc(hWnd, message, wParam, lParam);
+            }
+        }
+        break;
+    case WM_PAINT:
+        {                                                          
+            PAINTSTRUCT ps;
+            HDC hdc = BeginPaint(hWnd, &ps);
+            RECT rect;
+            GetClientRect(hWnd, &rect);
+            FillRect(hdc, &rect, (HBRUSH)WHITENESS);
+            if (painter != nullptr) {
+                painter->DrawTable(hdc,rect.right,rect.bottom);
+            }
+            else {
+                MessageBox(NULL, L"Таблица строк не найдена,пожалуйста выберите файл", L"warning", MB_ICONERROR);
+            }
+            EndPaint(hWnd, &ps);
+        }
+        break;
+    case WM_CREATE:
+        OnCreate(hWnd,wParam,lParam);
+        break;
+    case WM_SIZE:
+        if (watcher != NULL)
+            watcher->WriteMemory(true, "Resize");
+        break;
+    case WM_DESTROY:
+        delete painter;
+        delete watcher;
+        PostQuitMessage(0);
+        break;
+    default:
+        return DefWindowProc(hWnd, message, wParam, lParam);
+    }
+    return 0;
+}
+
+void OnCreate(HWND hWnd, WPARAM wParam, LPARAM lParam) {
+    FileReader* reader=new FileReader();
+    content = reader->GetContentFromFile("d:/context2.txt");
+    if (!content.empty()) {
+        painter = new TablePainter(content);
+    }
+    delete reader;
+}
 int SystemConfigurate() {
+    DWORD ErrorCode = GetLastError();
+    SIZE_T MinimumWorkingSetSize;
+    SIZE_T MaximumWorkingSetSize;
+    bool success = true;
+    HANDLE handle = GetCurrentProcess();
     try {
         SYSTEM_INFO SystemInfo;
         GetSystemInfo(&SystemInfo);
-        //MinimumWorkingSetSize = SystemInfo.dwPageSize * 20;
-        //MaximumWorkingSetSize = SystemInfo.dwPageSize * 30;
-        MinimumWorkingSetSize = 1;
-        MaximumWorkingSetSize = 1; 
+        MinimumWorkingSetSize = SystemInfo.dwPageSize * 512;
+        MaximumWorkingSetSize = SystemInfo.dwPageSize * 1024;
+        success = SetProcessWorkingSetSizeEx(
+            handle,
+            MinimumWorkingSetSize,
+            MaximumWorkingSetSize,
+            QUOTA_LIMITS_HARDWS_MAX_ENABLE
+        );
+        ErrorCode = GetLastError();
         return 0;
     }
     catch (...) {
         MinimumWorkingSetSize = 81920;
-        MaximumWorkingSetSize = 204800;                    
+        MaximumWorkingSetSize = 204800;
+        SetProcessWorkingSetSizeEx(
+            handle,
+            MinimumWorkingSetSize,
+            MaximumWorkingSetSize,
+            QUOTA_LIMITS_HARDWS_MAX_ENABLE
+        );
         return -1;
     }
 }
 
-// Обработчик сообщений для окна "О программе".
 INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
     UNREFERENCED_PARAMETER(lParam);

@@ -8,5 +8,5 @@ class FileReader
 public:
     FileReader();
     Strings GetContentFromFile(string); 
-    Strings GetContentFromFile(TCHAR);
+//    Strings GetContentFromFile(TCHAR);
 };

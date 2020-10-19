@@ -6,7 +6,6 @@ void ThreadWriteMemory(std::string, std::string);
 MemoryWatcher::MemoryWatcher(std::string Path) {
 	_path = Path;
 }
-
 void MemoryWatcher::WriteMemory(bool wait, std::string message = "") {
 	std::thread thread(ThreadWriteMemory, this->_path, message);
 	if (wait) {
@@ -17,7 +16,7 @@ void MemoryWatcher::WriteMemory(bool wait, std::string message = "") {
 	}
 }
 
-void ThreadWriteMemory(std::string path, std::string message) {
+void ThreadWriteMemory(static std::string path, std::string message) {
 	PROCESS_MEMORY_COUNTERS pmc;
 	GetProcessMemoryInfo(GetCurrentProcess(), &pmc, sizeof(PROCESS_MEMORY_COUNTERS));
 	std::ofstream file(path,std::ios_base::app);
