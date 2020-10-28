@@ -239,9 +239,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_DESTROY:
 		PostQuitMessage(0);
 		break;
-	case WM_SIZE:
-
-		
+	case WM_SIZE:		
 		bridge->OnResize(rect,&x,&y);
 		g_windowWidth = LOWORD(lParam);
 		g_windowHeight = HIWORD(lParam);
@@ -250,7 +248,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		OnCreate(hWnd, wParam, lParam);
 		break;
 	case WM_ERASEBKGND:
-		//InvalidateRect(hWnd, NULL, FALSE);
 		break;
 	default:
 		return DefWindowProc(hWnd, message, wParam, lParam);
@@ -283,8 +280,7 @@ void OnCreate(HWND hWnd,WPARAM wParam,LPARAM lParam) {
 	BYTE* pData = NULL;
 	HDC hdc = GetDC(hWnd);
 	//L"c:/imagenew.bmp"
-	HANDLE hFile = CreateFile(L"d:\\3.bmp", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-
+	HANDLE hFile = CreateFile(L"d:\\3.bmp", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);									   
 	if (hFile != INVALID_HANDLE_VALUE) {
 		DWORD dwSize;
 		SetFilePointer(hFile, sizeof(BITMAPFILEHEADER), NULL, FILE_BEGIN);
@@ -301,7 +297,5 @@ void OnCreate(HWND hWnd,WPARAM wParam,LPARAM lParam) {
 	}
 	else {
 		MessageBox(NULL, L"Error in loading image", L"warning", MB_ICONERROR);
-	}
-	
-
+	}																																			   
 }
