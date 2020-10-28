@@ -35,9 +35,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     // TODO: Разместите код здесь.   
     try
     {
-        watcher = new MemoryWatcher("e:/MemoryLog.txt");
+        //watcher = new MemoryWatcher("e:/MemoryLog.txt");
         SystemConfigurate();
-        watcher->WriteMemory(true, "start");
+        //watcher->WriteMemory(true, "start");
     }
     catch (const std::exception&)
     {
@@ -167,8 +167,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             switch (wmId)
             {
             case IDC_OPENFILE_DIALOG:
-                if(watcher!=NULL)
-                    watcher->WriteMemory(true, "Open Dialog");
                 FilePath = OpenFile(hWnd);
                 if (!FilePath.empty()) {
                     FileReader* reader = new FileReader();
@@ -179,10 +177,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                             painter->SetContent(content);
                         }
                         else {
-                            painter = new TablePainter(content);
+                            HDC hdc = CreateDC(TEXT("DISPLAY"), NULL, NULL, NULL);
+                            painter = new TablePainter(hdc, content);
                         }
-                        if (watcher != NULL)
-                            watcher->WriteMemory(true, "Close Dialog Success");
                         RedrawWindow(hWnd, NULL, NULL, RDW_UPDATENOW| RDW_ERASENOW | RDW_INVALIDATE);
                     }                    
                 }
@@ -208,8 +205,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hWnd, &ps);
             RECT rect;
-            GetClientRect(hWnd, &rect);
-            FillRect(hdc, &rect, (HBRUSH)WHITENESS);
+            GetClientRect(hWnd, &rect);                                
             if (painter != nullptr) {
                 painter->DrawTable(hdc,rect.right,rect.bottom);
             }
@@ -222,13 +218,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_CREATE:
         OnCreate(hWnd,wParam,lParam);
         break;
-    case WM_SIZE:
-        if (watcher != NULL)
-            watcher->WriteMemory(true, "Resize");
+    case WM_SIZE:   
         break;
     case WM_DESTROY:
         delete painter;
-        delete watcher;
+  
         PostQuitMessage(0);
         break;
     default:
@@ -239,9 +233,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 void OnCreate(HWND hWnd, WPARAM wParam, LPARAM lParam) {
     FileReader* reader=new FileReader();
-    content = reader->GetContentFromFile("d:/context2.txt");
+    content = reader->GetContentFromFile("e:/context3.txt");
     if (!content.empty()) {
-        painter = new TablePainter(content);
+        HDC hdc = CreateDC(TEXT("DISPLAY"), NULL, NULL, NULL);
+        painter = new TablePainter(hdc,content);
     }
     delete reader;
 }
@@ -254,8 +249,8 @@ int SystemConfigurate() {
     try {
         SYSTEM_INFO SystemInfo;
         GetSystemInfo(&SystemInfo);
-        MinimumWorkingSetSize = SystemInfo.dwPageSize * 512;
-        MaximumWorkingSetSize = SystemInfo.dwPageSize * 1024;
+        MinimumWorkingSetSize = SystemInfo.dwPageSize * 1024;
+        MaximumWorkingSetSize = SystemInfo.dwPageSize * 4096;
         success = SetProcessWorkingSetSizeEx(
             handle,
             MinimumWorkingSetSize,
