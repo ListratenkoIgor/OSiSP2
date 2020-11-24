@@ -152,7 +152,9 @@
     <ClCompile Include="ThreadPool.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CommonHeaders.h" />
     <ClInclude Include="ConcurrentQueue.h" />
+    <ClInclude Include="Task.h" />
     <ClInclude Include="ThreadPool.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

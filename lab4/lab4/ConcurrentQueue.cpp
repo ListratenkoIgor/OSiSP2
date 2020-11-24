@@ -1,5 +1,6 @@
 #include "ConcurrentQueue.h"
 
+
 ConcurrentQueue::ConcurrentQueue() {
     InitializeCriticalSection(&popCriticalSection);
     InitializeCriticalSection(&pushCriticalSection);
@@ -10,14 +11,16 @@ ConcurrentQueue::~ConcurrentQueue() {
     DeleteCriticalSection(&pushCriticalSection);
 }
 
-void ConcurrentQueue::Enqueue(PTask task) {
+template <typename T>
+void ConcurrentQueue<>::Enqueue(T element) {
     EnterCriticalSection(&pushCriticalSection);
 
-    this->concurrentQueue.push(task);
+    this->concurrentQueue.push(element);
 
     LeaveCriticalSection(&pushCriticalSection);
 }
-PTask ConcurrentQueue::Dequeue() {
+template <typename T>
+T ConcurrentQueue<T>::Dequeue() {
 
     EnterCriticalSection(&popCriticalSection);
     PTask result = NULL;
