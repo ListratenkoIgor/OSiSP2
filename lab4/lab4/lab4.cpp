@@ -3,21 +3,43 @@
 
 #include <iostream>
 #include <fstream>
+#include "CommonHeaders.h"
 #include "ThreadPool.h"
 #include "ConcurrentQueue.h"
 #include "Task.h"
-#define FILE_PATH_TO_READ  "D:\\5sem\\OSISP\\OSISP\\Lab4\\test.txt"
-#define FILE_PATH_TO_WRITE  "D:\\5sem\\OSISP\\OSISP\\Lab4\\out.txt"
+#define FILE_PATH_TO_READ  "G:\\test.txt"
+#define FILE_PATH_TO_WRITE  "G:\\out.txt"
 #define MAX_STRING_SIZE 1024
 
-void ThreadWork(PTP_CALLBACK_INSTANCE instance, PVOID parameter, PTP_WORK work) {
-    auto* pool = reinterpret_cast<Threadpool*>(parameter);
-    Task task = pool->queue->Dequeue();
-    int startIndex = task.parametrs.startOffset - 1;
-    int finishIndex = task.parametrs.endOffset;
-    (task.task)(pool->buffer->begin() + startIndex, pool->buffer->begin() + finishIndex);
-}
+ConcurrentQueue<std::exception>* exceptions = new ConcurrentQueue<std::exception>();
 
+
+void ThreadWork(PTP_CALLBACK_INSTANCE instance, PVOID parameter, PTP_WORK work) {
+    try {
+        auto* pool = reinterpret_cast<Threadpool*>(parameter);
+        Task task = pool->queue->Dequeue();
+        if (NULL == task.task) {
+            return;
+        }
+        int startIndex = task.parametrs.startOffset - 1;
+        int finishIndex = task.parametrs.endOffset;
+        (task.task)(pool->buffer->begin() + startIndex, pool->buffer->begin() + finishIndex);
+        throw new std::exception("My exceptions.Thread Normal Closed.");
+    }
+    catch(std::exception ex){
+
+        //std::string exception = ex.what() + " in thread " + std::this_thread::get_id;
+        char Message[MAX_STRING_SIZE] = {0};
+
+        strcpy_s(Message, ex.what());
+        strcat_s(Message, " in thread ");
+        char id[16] = {0};
+        _itoa_s((int)std::this_thread::get_id, id, 10);
+        strcat_s(Message, id);
+        //ex.what = Message;
+        exceptions->Enqueue(*new std::exception(Message));                             
+    }
+}
 void Sort(std::vector<std::string>::iterator begin, std::vector<std::string>::iterator end) {
     sort(begin, end);
 }
@@ -25,7 +47,6 @@ void Sort(std::vector<std::string>::iterator begin, std::vector<std::string>::it
 int main()
 {
     std::vector<std::string> buffer;
-
 
     std::cout << "Enter count of the threads" << std::endl;
     int countOfThreadsFromConsole;
@@ -84,11 +105,18 @@ int main()
 
     //___________________________________________________________________________________________________________________
 
+    
+    
 
     Threadpool* pool = new Threadpool(queue, &buffer);
+    pool->SetTreadPoolWork(ThreadWork);
     pool->SetThreadsCount(countOfThreads);
     pool->Process();
     pool->Wait();
+
+    while (!exceptions->IsEmpty()) {
+        std::cout << exceptions->Dequeue().what() << std::endl;
+    }
 
     //___________________________________________________________________________________________________________________
     int countSort = stringCount / stringCountForThread - 1;

@@ -1,7 +1,8 @@
 #include "ConcurrentQueue.h"
-
-
-ConcurrentQueue::ConcurrentQueue() {
+/*
+template<typename T>
+ConcurrentQueue<T>::ConcurrentQueue() {
+    this->concurrentQueue = new std::queue<T>();
     InitializeCriticalSection(&popCriticalSection);
     InitializeCriticalSection(&pushCriticalSection);
 }
@@ -12,7 +13,7 @@ ConcurrentQueue::~ConcurrentQueue() {
 }
 
 template <typename T>
-void ConcurrentQueue<>::Enqueue(T element) {
+void ConcurrentQueue::Enqueue(T element) {
     EnterCriticalSection(&pushCriticalSection);
 
     this->concurrentQueue.push(element);
@@ -20,7 +21,7 @@ void ConcurrentQueue<>::Enqueue(T element) {
     LeaveCriticalSection(&pushCriticalSection);
 }
 template <typename T>
-T ConcurrentQueue<T>::Dequeue() {
+T ConcurrentQueue::Dequeue() {
 
     EnterCriticalSection(&popCriticalSection);
     PTask result = NULL;
@@ -33,3 +34,4 @@ T ConcurrentQueue<T>::Dequeue() {
     return result;
 }
 
+*/
