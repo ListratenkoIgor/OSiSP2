@@ -7,15 +7,16 @@
 #include "ThreadPool.h"
 #include "ConcurrentQueue.h"
 #include "Task.h"
-#define FILE_PATH_TO_READ  "G:\\test.txt"
-#define FILE_PATH_TO_WRITE  "G:\\out.txt"
+#define FILE_PATH_TO_READ  "E:\\test.txt"
+#define FILE_PATH_TO_WRITE  "E:\\out.txt"
 #define MAX_STRING_SIZE 1024
 
-ConcurrentQueue<std::exception>* exceptions = new ConcurrentQueue<std::exception>();
-
+ConcurrentQueue<std::exception_ptr>* exceptions = new ConcurrentQueue<std::exception_ptr>();
+ConcurrentQueue<std::pair<int, std::exception_ptr>>* exceptions_ptr = new ConcurrentQueue<std::pair<int, std::exception_ptr>>();
 
 void ThreadWork(PTP_CALLBACK_INSTANCE instance, PVOID parameter, PTP_WORK work) {
     try {
+        std::cout<<  std::this_thread::get_id()<<" start\n" <<std::endl;
         auto* pool = reinterpret_cast<Threadpool*>(parameter);
         Task task = pool->queue->Dequeue();
         if (NULL == task.task) {
@@ -23,25 +24,34 @@ void ThreadWork(PTP_CALLBACK_INSTANCE instance, PVOID parameter, PTP_WORK work) 
         }
         int startIndex = task.parametrs.startOffset - 1;
         int finishIndex = task.parametrs.endOffset;
-        (task.task)(pool->buffer->begin() + startIndex, pool->buffer->begin() + finishIndex);
-        throw new std::exception("My exceptions.Thread Normal Closed.");
-    }
-    catch(std::exception ex){
+        if(NULL!=task.task)
+            
+            (task.task)(pool->buffer->begin() + startIndex, pool->buffer->begin() + finishIndex);
 
-        //std::string exception = ex.what() + " in thread " + std::this_thread::get_id;
-        char Message[MAX_STRING_SIZE] = {0};
-
-        strcpy_s(Message, ex.what());
-        strcat_s(Message, " in thread ");
-        char id[16] = {0};
-        _itoa_s((int)std::this_thread::get_id, id, 10);
-        strcat_s(Message, id);
-        //ex.what = Message;
-        exceptions->Enqueue(*new std::exception(Message));                             
+        std::cout << std::this_thread::get_id() << " end\n" << std::endl;
+        //throw new std::exception("My exceptions.Thread Normal Closed.");
     }
+    catch(...){
+        std::exception_ptr ex_ptr = std::current_exception();
+        exceptions->Enqueue(ex_ptr);                             
+    }
+    return;
+
 }
 void Sort(std::vector<std::string>::iterator begin, std::vector<std::string>::iterator end) {
     sort(begin, end);
+}
+
+void handle_eptr(std::exception_ptr eptr)
+{
+    try {
+        if (eptr) {
+            std::rethrow_exception(eptr);
+        }
+    }
+    catch (const std::exception& e) {
+        std::cout << "Caught exception \"" << e.what() << "\"\n";
+    }
 }
 
 int main()
@@ -109,13 +119,13 @@ int main()
     
 
     Threadpool* pool = new Threadpool(queue, &buffer);
-    pool->SetTreadPoolWork(ThreadWork);
+    pool->SetTreadPoolWork((Work_Callback_Function)ThreadWork);
     pool->SetThreadsCount(countOfThreads);
     pool->Process();
     pool->Wait();
 
     while (!exceptions->IsEmpty()) {
-        std::cout << exceptions->Dequeue().what() << std::endl;
+        handle_eptr(exceptions->Dequeue());
     }
 
     //___________________________________________________________________________________________________________________
