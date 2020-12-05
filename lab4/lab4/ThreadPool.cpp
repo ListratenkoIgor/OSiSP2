@@ -18,6 +18,12 @@ Threadpool::Threadpool(ConcurrentQueue<Task>* queue, std::vector<std::string>* b
     this->WorkCallback = NULL;
 }
 
+Threadpool::~Threadpool() {
+
+    CloseThreadpoolCleanupGroup(this->cleanupGroup);
+    CloseThreadpool(this->pool);
+}
+
 void Threadpool::SetThreadsCount(int threadCount) {
     this->ThreadsCount = threadCount;
     SetThreadpoolThreadMaximum(this->pool, threadCount);
@@ -25,22 +31,6 @@ void Threadpool::SetThreadsCount(int threadCount) {
 
 void Threadpool::SetTreadPoolWork(Work_Callback_Function WorkCallback) {
     this->WorkCallback = WorkCallback;
-}
-
-/*
-
-void Threadpool::SortFile(void* queueElem) {
-    //int startIndex = queueElem.startOffset - 1;
-    //int finishIndex = queueElem.finishOffset;
-    //sort(buffer->begin() + startIndex, buffer->begin() + finishIndex);
-    
-}
-
-*/
-Threadpool::~Threadpool() {
-
-    CloseThreadpoolCleanupGroup(this->cleanupGroup);
-    CloseThreadpool(this->pool);
 }
 
 void Threadpool::Process() {
@@ -55,12 +45,3 @@ void Threadpool::Process() {
 void Threadpool::Wait() {
     CloseThreadpoolCleanupGroupMembers(this->cleanupGroup, false, nullptr);
 }
-/*
-void Threadpool::WorkCallback(PTP_CALLBACK_INSTANCE instance, PVOID parameter, PTP_WORK work) {
-    auto* myThis = reinterpret_cast<Threadpool*>(parameter);
-    PTask task = (myThis->myQueue->Dequeue());
-    if (task != NULL) {
-        (task->task)(task->parametrs.startOffset, task->parametrs.endOffset);
-    }                                                                            
-}
-*/

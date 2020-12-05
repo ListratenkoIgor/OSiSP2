@@ -12,13 +12,11 @@ public:
     std::vector<std::string>* buffer;
 
     Threadpool(ConcurrentQueue<Task>* , std::vector<std::string>* );
-
     ~Threadpool();
 
     void SetTreadPoolWork(Work_Callback_Function);
     void SetThreadsCount(int);
     void Process();
-
     void Wait();
 
 private:
@@ -26,7 +24,6 @@ private:
     PTP_POOL pool;
     PTP_CLEANUP_GROUP cleanupGroup;
     TP_CALLBACK_ENVIRON callbackEnvironment;
-    //void SortFile(void*);
     Work_Callback_Function  WorkCallback;
 
 };

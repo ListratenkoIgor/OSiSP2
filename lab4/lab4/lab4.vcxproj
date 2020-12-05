@@ -147,7 +147,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="ConcurrentQueue.cpp" />
     <ClCompile Include="lab4.cpp" />
     <ClCompile Include="ThreadPool.cpp" />
   </ItemGroup>
